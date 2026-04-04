@@ -14,19 +14,20 @@ func SaveDifferences(filename string, data1, data2 []string) error {
 
 	if len(data1) == 0 && len(data2) == 0 {
 		if err := os.WriteFile(filename, []byte{}, 0644); err != nil {
-			return fmt.Errorf("error writing differences file: %w", err)
+			return fmt.Errorf("ошибка записи в файл: %w", err)
 		}
 		return nil
 	}
 
 	leftWidth := maxColumnWidth(leftHeader, data1)
 	rightWidth := maxColumnWidth(rightHeader, data2)
-	content.WriteString(fmt.Sprintf("%s | %s\n", centerText(leftHeader, leftWidth), centerText(rightHeader, rightWidth)))
-
 	maxLen := len(data1)
 	if len(data2) > maxLen {
 		maxLen = len(data2)
 	}
+	content.WriteString("\t\t\t\t\t\tОТЛИЧИЯ\n")
+	numberWidth := len(fmt.Sprintf("%d.", maxLen))
+	content.WriteString(fmt.Sprintf("%-*s %s | %s\n", numberWidth, "", centerText(leftHeader, leftWidth), centerText(rightHeader, rightWidth)))
 
 	for i := 0; i < maxLen; i++ {
 		var left, right string
@@ -36,11 +37,11 @@ func SaveDifferences(filename string, data1, data2 []string) error {
 		if i < len(data2) {
 			right = data2[i]
 		}
-		content.WriteString(fmt.Sprintf("%s | %s\n", centerText(left, leftWidth), centerText(right, rightWidth)))
+		content.WriteString(fmt.Sprintf("%-*s %s | %s\n", numberWidth, fmt.Sprintf("%d.", i+1), centerText(left, leftWidth), centerText(right, rightWidth)))
 	}
 
 	if err := os.WriteFile(filename, []byte(content.String()), 0644); err != nil {
-		return fmt.Errorf("error writing differences file: %w", err)
+		return fmt.Errorf("ошибка записи в файл: %w", err)
 	}
 
 	return nil

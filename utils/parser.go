@@ -29,7 +29,7 @@ func Parse(file *os.File) []string {
 func fileToString(file *os.File) (string, error) {
 	data, err := os.ReadFile(file.Name())
 	if err != nil {
-		return "", errors.New("error reading file")
+		return "", errors.New("ошибка чтения файла")
 	}
 	return string(data), nil
 }
