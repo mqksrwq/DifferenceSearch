@@ -11,8 +11,18 @@ func main() {
 	file2, _ := os.Open("выгрузка.txt")
 	fmt.Printf("Файлы '%s' и '%s' загружены", file1.Name(), file2.Name())
 
-	defer file1.Close()
-	defer file2.Close()
+	defer func(file1 *os.File) {
+		err := file1.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(file1)
+	defer func(file2 *os.File) {
+		err := file2.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(file2)
 
 	data1 := utils.Parse(file1)
 	data2 := utils.Parse(file2)
