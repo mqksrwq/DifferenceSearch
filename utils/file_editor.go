@@ -7,10 +7,8 @@ import (
 	"unicode/utf8"
 )
 
-func SaveDifferences(filename string, data1, data2 []string) error {
+func SaveDifferences(filename, leftHeader, rightHeader string, data1, data2 []string) error {
 	content := strings.Builder{}
-	leftHeader := "MPRM160D_v7.1.bom"
-	rightHeader := "выгрузка.txt"
 
 	if len(data1) == 0 && len(data2) == 0 {
 		if err := os.WriteFile(filename, []byte{}, 0644); err != nil {
