@@ -19,6 +19,7 @@ func Parse(file *os.File) []string {
 	switch filepath.Ext(file.Name()) {
 	case ".bom":
 		data = serializeBom(fileString)
+		unpacking(&data)
 	default:
 		data = serializeTxt(fileString)
 		unpacking(&data)
@@ -71,12 +72,25 @@ func unpacking(data *[]string) {
 			continue
 		}
 
-		if strings.Contains(elem, "...") {
-			before, after, found := strings.Cut(elem, "...")
-			if !found {
-				result = append(result, elem)
-				continue
+		if strings.Contains(elem, ",") {
+
+			for _, elem := range strings.Split(elem, ",") {
+				var chStart, numberStr string
+				elem = strings.TrimSpace(elem)
+
+				for _, ch := range elem {
+					if ch >= '0' && ch <= '9' {
+						numberStr += string(ch)
+					} else {
+						chStart += string(ch)
+					}
+				}
+
+				s := chStart + numberStr
+				result = append(result, s)
 			}
+		} else if strings.Contains(elem, "...") {
+			before, after, _ := strings.Cut(elem, "...")
 
 			var start, end string
 			var chStart string

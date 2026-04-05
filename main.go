@@ -4,17 +4,19 @@ import (
 	"DifferenceSearch/utils"
 	"fmt"
 	"os"
-	"path/filepath"
 )
 
 func main() {
-	if len(os.Args) != 3 {
-		fmt.Printf("Использование: %s <файл1> <файл2>\n", filepath.Base(os.Args[0]))
-		os.Exit(1)
-	}
+	//if len(os.Args) != 3 {
+	//	fmt.Printf("Использование: %s <файл1> <файл2>\n", filepath.Base(os.Args[0]))
+	//	os.Exit(1)
+	//}
+	//
+	//file1Path := os.Args[1]
+	//file2Path := os.Args[2]
 
-	file1Path := os.Args[1]
-	file2Path := os.Args[2]
+	file1Path := "MPRM160D_v7.1.bom"
+	file2Path := "выгрузка.txt"
 
 	file1, err := os.Open(file1Path)
 	if err != nil {
