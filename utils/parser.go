@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -19,27 +19,40 @@ func Parse(file *os.File) []string {
 	switch filepath.Ext(file.Name()) {
 	case ".bom":
 		data = serializeBom(fileString)
-		unpacking(&data)
 	default:
 		data = serializeTxt(fileString)
-		unpacking(&data)
 	}
+	unpacking(&data)
 	return data
 }
 
 func fileToString(file *os.File) (string, error) {
-	data, err := os.ReadFile(file.Name())
-	if err != nil {
-		return "", errors.New("ошибка чтения файла")
+	if _, err := file.Seek(0, 0); err != nil {
+		return "", fmt.Errorf("ошибка позиционирования файла: %w", err)
 	}
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return "", fmt.Errorf("ошибка чтения файла: %w", err)
+	}
+
 	return string(data), nil
 }
 
 func serializeBom(file string) []string {
 	var res []string
 	rows := strings.Split(file, "\n")
-	for _, row := range rows[2 : len(rows)-1] {
-		value := strings.TrimSpace(strings.Trim(strings.Split(row, "|")[2], `""`))
+	if len(rows) <= 2 {
+		return res
+	}
+
+	for _, row := range rows[2:] {
+		parts := strings.Split(row, "|")
+		if len(parts) < 3 {
+			continue
+		}
+
+		value := strings.TrimSpace(strings.Trim(parts[2], `""`))
 		if value == "" {
 			continue
 		}
@@ -67,57 +80,52 @@ func unpacking(data *[]string) {
 	result := make([]string, 0, len(*data))
 
 	for _, elem := range *data {
-		elem = strings.TrimSpace(elem)
-		if elem == "" {
-			continue
-		}
+		for _, token := range strings.Split(elem, ",") {
+			token = strings.TrimSpace(token)
+			if token == "" {
+				continue
+			}
 
-		if strings.Contains(elem, ",") {
+			if strings.Contains(token, "...") {
+				before, after, _ := strings.Cut(token, "...")
+				prefix, start := splitPrefixAndNumber(before)
+				_, end := splitPrefixAndNumber(after)
 
-			for _, elem := range strings.Split(elem, ",") {
-				var chStart, numberStr string
-				elem = strings.TrimSpace(elem)
-
-				for _, ch := range elem {
-					if ch >= '0' && ch <= '9' {
-						numberStr += string(ch)
-					} else {
-						chStart += string(ch)
-					}
+				s1, err1 := strconv.Atoi(start)
+				s2, err2 := strconv.Atoi(end)
+				if err1 != nil || err2 != nil || s1 > s2 {
+					result = append(result, token)
+					continue
 				}
 
-				s := chStart + numberStr
-				result = append(result, s)
-			}
-		} else if strings.Contains(elem, "...") {
-			before, after, _ := strings.Cut(elem, "...")
-
-			var start, end string
-			var chStart string
-
-			for _, ch := range before {
-				if ch >= '0' && ch <= '9' {
-					start += string(ch)
-				} else {
-					chStart += string(ch)
+				for i := s1; i <= s2; i++ {
+					result = append(result, prefix+strconv.Itoa(i))
 				}
-			}
-			for _, ch := range after {
-				if ch >= '0' && ch <= '9' {
-					end += string(ch)
-				}
+				continue
 			}
 
-			s1, _ := strconv.Atoi(start)
-			s2, _ := strconv.Atoi(end)
-
-			for i := s1; i <= s2; i++ {
-				st := chStart + strconv.Itoa(i)
-				result = append(result, st)
+			prefix, number := splitPrefixAndNumber(token)
+			if number == "" {
+				result = append(result, token)
+				continue
 			}
-		} else {
-			result = append(result, elem)
+			result = append(result, prefix+number)
 		}
 	}
 	*data = result
+}
+
+func splitPrefixAndNumber(s string) (string, string) {
+	var prefixBuilder strings.Builder
+	var numberBuilder strings.Builder
+
+	for _, ch := range s {
+		if ch >= '0' && ch <= '9' {
+			numberBuilder.WriteRune(ch)
+			continue
+		}
+		prefixBuilder.WriteRune(ch)
+	}
+
+	return prefixBuilder.String(), numberBuilder.String()
 }
