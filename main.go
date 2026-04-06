@@ -16,6 +16,10 @@ func main() {
 	file1Path := os.Args[1]
 	file2Path := os.Args[2]
 
+	// для тестирования
+	//file1Path := "MPRM160D_v7.1.bom"
+	//file2Path := "выгрузка.txt"
+
 	file1, err := os.Open(file1Path)
 	if err != nil {
 		fmt.Printf("Не удалось открыть файл '%s': %v\n", file1Path, err)

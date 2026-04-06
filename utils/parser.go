@@ -48,7 +48,7 @@ func serializeBom(file string) []string {
 
 	for _, row := range rows[2:] {
 		parts := strings.Split(row, "|")
-		if len(parts) < 3 {
+		if len(parts) < 3 || strings.TrimSpace(strings.Trim(parts[4], `""`)) == "not" {
 			continue
 		}
 
