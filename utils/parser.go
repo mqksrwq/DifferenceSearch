@@ -48,11 +48,11 @@ func serializeBom(file string) []string {
 
 	for _, row := range rows[2:] {
 		parts := strings.Split(row, "|")
-		if len(parts) < 3 || strings.TrimSpace(strings.Trim(parts[4], `""`)) == "not" {
+		if len(parts) < 5 || strings.ToUpper(strings.TrimSpace(strings.Trim(parts[4], `""`))) == "NOT" {
 			continue
 		}
 
-		value := strings.TrimSpace(strings.Trim(parts[2], `""`))
+		value := strings.ToUpper(strings.TrimSpace(strings.Trim(parts[2], `""`)))
 		if value == "" {
 			continue
 		}
@@ -67,7 +67,7 @@ func serializeTxt(file string) []string {
 	rows := strings.Split(file, "\n")
 	for _, row := range rows {
 		before, _, _ := strings.Cut(row, "\t")
-		value := strings.TrimSpace(before)
+		value := strings.ToUpper(strings.TrimSpace(before))
 		if value == "" {
 			continue
 		}
@@ -81,7 +81,7 @@ func unpacking(data *[]string) {
 
 	for _, elem := range *data {
 		for _, token := range strings.Split(elem, ",") {
-			token = strings.TrimSpace(token)
+			token = strings.ToUpper(strings.TrimSpace(token))
 			if token == "" {
 				continue
 			}
