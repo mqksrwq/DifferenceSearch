@@ -49,6 +49,14 @@ func main() {
 	data1 := utils.Parse(file1)
 	data2 := utils.Parse(file2)
 
+	ext1 := filepath.Ext(file1.Name())
+	ext2 := filepath.Ext(file2.Name())
+	if (ext1 == ".bom" && ext2 == ".txt") || (ext1 == ".txt" && ext2 == ".bom") {
+		parts1 := utils.ParsePartNumbers(file1)
+		parts2 := utils.ParsePartNumbers(file2)
+		utils.SkipMismatchedPartNumbers(&data1, &data2, parts1, parts2)
+	}
+
 	utils.Search(&data1, &data2)
 
 	if len(data1) != len(data2) {

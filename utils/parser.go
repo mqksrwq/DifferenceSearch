@@ -89,6 +89,97 @@ func serializeTxt(file string) []string {
 	return res
 }
 
+func ParsePartNumbers(file *os.File) map[string]string {
+	fileString, err := fileToString(file)
+	if err != nil {
+		fmt.Println(err)
+		return map[string]string{}
+	}
+
+	switch filepath.Ext(file.Name()) {
+	case ".bom":
+		return parseBomPartNumbers(fileString)
+	default:
+		return parseTxtPartNumbers(fileString)
+	}
+}
+
+func parseBomPartNumbers(file string) map[string]string {
+	result := make(map[string]string)
+	rows := strings.Split(file, "\n")
+	if len(rows) <= 2 {
+		return result
+	}
+
+	for _, row := range rows[2:] {
+		parts := strings.Split(row, "|")
+		if rowHasRepZnak(parts) || len(parts) < 6 {
+			continue
+		}
+
+		refRaw := normalizeToken(parts[2])
+		partNumber := normalizeToken(parts[5])
+		if refRaw == "" || partNumber == "" {
+			continue
+		}
+
+		for _, ref := range expandRefs(refRaw) {
+			result[ref] = partNumber
+		}
+	}
+
+	return result
+}
+
+func parseTxtPartNumbers(file string) map[string]string {
+	result := make(map[string]string)
+	rows := strings.Split(file, "\n")
+	for _, row := range rows {
+		beforeTab, _, _ := strings.Cut(row, "\t")
+		refRaw := normalizeToken(beforeTab)
+		if refRaw == "" {
+			continue
+		}
+
+		article := extractCurlyValue(row)
+		if article == "" {
+			continue
+		}
+		article = normalizeToken(article)
+		if article == "" {
+			continue
+		}
+
+		for _, ref := range expandRefs(refRaw) {
+			result[ref] = article
+		}
+	}
+
+	return result
+}
+
+func extractCurlyValue(row string) string {
+	start := strings.IndexByte(row, '{')
+	if start < 0 {
+		return ""
+	}
+	end := strings.IndexByte(row[start+1:], '}')
+	if end < 0 {
+		return ""
+	}
+	return row[start+1 : start+1+end]
+}
+
+func normalizeToken(value string) string {
+	return strings.ToUpper(strings.TrimSpace(strings.Trim(value, `""`)))
+}
+
+func expandRefs(value string) []string {
+	refs := []string{value}
+	unpacking(&refs)
+	return refs
+}
+
 func unpacking(data *[]string) {
 	result := make([]string, 0, len(*data))
 
