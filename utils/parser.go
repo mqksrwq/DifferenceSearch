@@ -51,11 +51,17 @@ func serializeBom(file string) []string {
 		if rowHasRepZnak(parts) {
 			continue
 		}
-		if len(parts) < 5 || strings.ToUpper(strings.TrimSpace(strings.Trim(parts[4], `""`))) == "NOT" {
+		if len(parts) < 8 {
+			continue
+		}
+		if normalizeToken(parts[7]) == "" {
+			continue
+		}
+		if normalizeToken(parts[4]) == "NOT" {
 			continue
 		}
 
-		value := strings.ToUpper(strings.TrimSpace(strings.Trim(parts[2], `""`)))
+		value := normalizeToken(parts[2])
 		if value == "" {
 			continue
 		}
@@ -113,7 +119,10 @@ func parseBomPartNumbers(file string) map[string]string {
 
 	for _, row := range rows[2:] {
 		parts := strings.Split(row, "|")
-		if rowHasRepZnak(parts) || len(parts) < 6 {
+		if rowHasRepZnak(parts) || len(parts) < 8 {
+			continue
+		}
+		if normalizeToken(parts[7]) == "" {
 			continue
 		}
 
