@@ -51,6 +51,17 @@ func main() {
 
 	ext1 := filepath.Ext(file1.Name())
 	ext2 := filepath.Ext(file2.Name())
+	attentionSide := 0
+	var attentionData []string
+	if ext1 == ".bom" {
+		attentionSide = 1
+		attentionData = utils.ParseBomMissingMounting(file1)
+	}
+	if ext2 == ".bom" {
+		attentionSide = 2
+		attentionData = utils.ParseBomMissingMounting(file2)
+	}
+
 	if (ext1 == ".bom" && ext2 == ".txt") || (ext1 == ".txt" && ext2 == ".bom") {
 		parts1 := utils.ParsePartNumbers(file1)
 		parts2 := utils.ParsePartNumbers(file2)
@@ -65,7 +76,7 @@ func main() {
 		fmt.Println("Файлы идентичны")
 	}
 
-	if err := utils.SaveDifferences("result.txt", file1.Name(), file2.Name(), data1, data2); err != nil {
+	if err := utils.SaveDifferences("result.txt", file1.Name(), file2.Name(), data1, data2, attentionSide, attentionData); err != nil {
 		fmt.Println(err)
 	}
 	fmt.Println("Результат сохранен в файл result.txt")

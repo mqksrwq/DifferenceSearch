@@ -110,6 +110,20 @@ func ParsePartNumbers(file *os.File) map[string]string {
 	}
 }
 
+func ParseBomMissingMounting(file *os.File) []string {
+	fileString, err := fileToString(file)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	if filepath.Ext(file.Name()) != ".bom" {
+		return nil
+	}
+
+	return parseBomMissingMounting(fileString)
+}
+
 func parseBomPartNumbers(file string) map[string]string {
 	result := make(map[string]string)
 	rows := strings.Split(file, "\n")
@@ -134,6 +148,45 @@ func parseBomPartNumbers(file string) map[string]string {
 
 		for _, ref := range expandRefs(refRaw) {
 			result[ref] = partNumber
+		}
+	}
+
+	return result
+}
+
+func parseBomMissingMounting(file string) []string {
+	var result []string
+	seen := make(map[string]struct{})
+
+	rows := strings.Split(file, "\n")
+	if len(rows) <= 2 {
+		return result
+	}
+
+	for _, row := range rows[2:] {
+		parts := strings.Split(row, "|")
+		if rowHasRepZnak(parts) || len(parts) < 8 {
+			continue
+		}
+
+		if normalizeToken(parts[7]) != "" {
+			continue
+		}
+		if normalizeToken(parts[5]) == "" {
+			continue
+		}
+
+		refRaw := normalizeToken(parts[2])
+		if refRaw == "" {
+			continue
+		}
+
+		for _, ref := range expandRefs(refRaw) {
+			if _, exists := seen[ref]; exists {
+				continue
+			}
+			seen[ref] = struct{}{}
+			result = append(result, ref)
 		}
 	}
 
