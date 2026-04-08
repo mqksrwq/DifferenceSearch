@@ -48,6 +48,9 @@ func serializeBom(file string) []string {
 
 	for _, row := range rows[2:] {
 		parts := strings.Split(row, "|")
+		if rowHasRepZnak(parts) {
+			continue
+		}
 		if len(parts) < 5 || strings.ToUpper(strings.TrimSpace(strings.Trim(parts[4], `""`))) == "NOT" {
 			continue
 		}
@@ -59,6 +62,16 @@ func serializeBom(file string) []string {
 		res = append(res, value)
 	}
 	return res
+}
+
+func rowHasRepZnak(parts []string) bool {
+	for _, cell := range parts {
+		value := strings.ToUpper(strings.TrimSpace(strings.Trim(cell, `""`)))
+		if value == "REP_ZNAK" {
+			return true
+		}
+	}
+	return false
 }
 
 func serializeTxt(file string) []string {
